@@ -21,17 +21,21 @@ const server = http.createServer(async (req, res) => {
   }
 
   else if (req.method === 'GET' && req.url === '/api/usuarios') {
-    const { data, error } = await supabase.rpc('sql', {
-      query: "SELECT id, nome FROM usuarios WHERE id IN (1, 2, 3)"
-    });
+    try {
+      
+      let { data, error } = await supabase.rpc('listar_usuarios_com_tipo')
+      if (error) console.error(error)
+      else console.log(data)
 
-    if (error) {
-      res.writeHead(500);
-      return res.end(JSON.stringify({ erro: 'Erro ao buscar usuários' }));
+  
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(data));
+  
+    } catch (err) {
+      console.error('Erro inesperado:', err); // <-- Aqui loga erros JS inesperados
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ erro: 'Erro inesperado no servidor', detalhes: err.message }));
     }
-
-    res.writeHead(200);
-    return res.end(JSON.stringify(data));
   }
 
   // Outros endpoints

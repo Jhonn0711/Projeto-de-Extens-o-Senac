@@ -34,4 +34,8 @@ async function carregarDesafios() {
   });
 }
 
-
+async function carregaUserSistema(){
+  const response = await fetchData('http://localhost:3000/api/usuarios');
+  console.log(response)
+  return response;
+} 
