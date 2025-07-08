@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
 
     <!-- Nav bar principal -->
@@ -315,13 +316,19 @@
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="registerName" class="form-label">Nome/Razão Social</label>
                                     <input type="text" class="form-control" id="registerName" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="registerCPF" class="form-label">CPF/CNPJ</label>
+                                    <input type="text" class="form-control" id="registerCPF" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="registerEmail" class="form-label">E-mail</label>
                                     <input type="email" class="form-control" id="registerEmail" required>
@@ -352,7 +359,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="register()">Cadastrar</button>
+                    <button type="button" class="btn btn-primary" onclick="cadastrarUsuario()">Cadastrar</button>
                 </div>
             </div>
         </div>
@@ -384,14 +391,101 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="assets/js/api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
 
 <script>
     
+    async function cadastrarUsuario() {
+  const tipo = document.querySelector('input[name="userType"]:checked')?.value;
+  const nome = document.querySelector('#registerName').value.trim();
+  const cpfCnpj = document.querySelector('#registerCPF').value.trim();
+  const email = document.querySelector('#registerEmail').value.trim();
+  const senha = document.querySelector('#registerPassword').value;
+  const confirmarSenha = document.querySelector('#confirmPassword').value;
+  const descricao = document.querySelector('#registerDescription').value.trim();
 
+  if (!tipo || !nome || !cpfCnpj || !email || !senha || !confirmarSenha) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Atenção',
+      text: 'Preencha todos os campos obrigatórios.',
+    });
+    return;
+  }
 
-    console.log(carregaUserSistema());
+  if (senha !== confirmarSenha) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'As senhas não coincidem.',
+    });
+    return;
+  }
+
+  // Define os campos cpf/cnpj e razão social dependendo do tipo de usuário
+  let cpf = null;
+  let cnpj = null;
+  let razao_social = null;
+
+  const tipoMap = {
+    empresa: 1,
+    admin: 2,
+    solucionador: 3
+  };
+
+  const id_tipo_usuario = tipoMap[tipo];
+
+  cnpj = cpfCnpj;
+  cpf = cpfCnpj;
+  razao_social = nome;
+  
+
+  const dados = {
+    nome,
+    razao_social,
+    cpf,
+    cnpj,
+    email,
+    senha,
+    descricao,
+    id_tipo_usuario,
+  };
+
+  try {
+    const response = await fetch('http://localhost:3000/api/usuarios', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dados),
+    });
+
+    const resultado = await response.json();
+    if (response.ok) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Sucesso!',
+        text: 'Usuário cadastrado com sucesso!',
+      });
+      document.getElementById("registerForm").reset();
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro ao cadastrar',
+        text: resultado.erro || 'Ocorreu um erro desconhecido.',
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro de conexão',
+      text: 'Erro na comunicação com o servidor.',
+    });
+  }
+}
 
     // $(document).ready(() => {
     //     carregarDesafios();
