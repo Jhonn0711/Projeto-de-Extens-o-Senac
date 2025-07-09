@@ -8,6 +8,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
 
 <body class="bg-light">
@@ -38,8 +42,8 @@
                 </ul>
                 
                 <div class="navbar-nav" id="auth-buttons">
-                    <button class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</button>
-                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#registerModal">Cadastrar-se</button>
+                    <button class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal" id="entrar">Entrar</button>
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#registerModal" id="cadastrar">Cadastrar-se</button>
                 </div>
                 
                 <!-- Pós log-in -->
@@ -261,8 +265,8 @@
                             <input type="email" class="form-control" id="loginEmail" required>
                         </div>
                         <div class="mb-3">
-                            <label for="loginPassword" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="loginPassword" required>
+                            <label for="loginSenha" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="loginSenha" required>
                         </div>
                     </form>
                 </div>
@@ -386,6 +390,72 @@
         </div>
     </div>
 
+    <!-- MODAL COMPLETA PARA CADASTRO, LISTAGEM, EDIÇÃO E EXCLUSÃO DE DESAFIOS -->
+<div class="modal fade" id="modalCadastrarDesafio" tabindex="-1" aria-labelledby="modalCadastrarDesafioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+  
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalCadastrarDesafioLabel">
+            <i class="fas fa-lightbulb me-1"></i> Gerenciar Desafios
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+  
+        <div class="modal-body">
+          <form id="formCadastrarDesafio">
+            <input type="hidden" id="idDesafio">
+  
+            <div class="mb-3">
+              <label for="inputTituloDesafio" class="form-label">Título do Desafio</label>
+              <input type="text" class="form-control" id="inputTituloDesafio" required>
+            </div>
+  
+            <div class="mb-3">
+              <label for="inputDescricaoDesafio" class="form-label">Descrição</label>
+              <textarea class="form-control" id="inputDescricaoDesafio" rows="4" required></textarea>
+            </div>
+  
+            <div class="mb-3">
+              <label for="selectCategoriaDesafio" class="form-label">Categoria</label>
+              <select class="form-select" id="selectCategoriaDesafio" required>
+                <option value="">Selecione uma categoria</option>
+                <option value="1">Tecnologia</option>
+                <option value="2">Sustentabilidade</option>
+                <option value="3">Saúde</option>
+                <option value="4">Educação</option>
+                <option value="5">Finanças</option>
+              </select>
+            </div>
+  
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">Salvar Desafio</button>
+            </div>
+          </form>
+  
+          <hr>
+          <h5 class="mt-4">Desafios Cadastrados</h5>
+          <table class="table table-bordered mt-3">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaDesafios"></tbody>
+          </table>
+        </div>
+  
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+  
+      </div>
+    </div>
+  </div>
+
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -396,99 +466,242 @@
 </html>
 
 <script>
-    
+    $entrou = 0;
     async function cadastrarUsuario() {
-  const tipo = document.querySelector('input[name="userType"]:checked')?.value;
-  const nome = document.querySelector('#registerName').value.trim();
-  const cpfCnpj = document.querySelector('#registerCPF').value.trim();
-  const email = document.querySelector('#registerEmail').value.trim();
-  const senha = document.querySelector('#registerPassword').value;
-  const confirmarSenha = document.querySelector('#confirmPassword').value;
-  const descricao = document.querySelector('#registerDescription').value.trim();
+    const tipo = document.querySelector('input[name="userType"]:checked')?.value;
+    const nome = document.querySelector('#registerName').value.trim();
+    const cpfCnpj = document.querySelector('#registerCPF').value.trim();
+    const email = document.querySelector('#registerEmail').value.trim();
+    const senha = document.querySelector('#registerPassword').value;
+    const confirmarSenha = document.querySelector('#confirmPassword').value;
+    const descricao = document.querySelector('#registerDescription').value.trim();
 
-  if (!tipo || !nome || !cpfCnpj || !email || !senha || !confirmarSenha) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Atenção',
-      text: 'Preencha todos os campos obrigatórios.',
-    });
-    return;
-  }
-
-  if (senha !== confirmarSenha) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Erro',
-      text: 'As senhas não coincidem.',
-    });
-    return;
-  }
-
-  // Define os campos cpf/cnpj e razão social dependendo do tipo de usuário
-  let cpf = null;
-  let cnpj = null;
-  let razao_social = null;
-
-  const tipoMap = {
-    empresa: 1,
-    admin: 2,
-    solucionador: 3
-  };
-
-  const id_tipo_usuario = tipoMap[tipo];
-
-  cnpj = cpfCnpj;
-  cpf = cpfCnpj;
-  razao_social = nome;
-  
-
-  const dados = {
-    nome,
-    razao_social,
-    cpf,
-    cnpj,
-    email,
-    senha,
-    descricao,
-    id_tipo_usuario,
-  };
-
-  try {
-    const response = await fetch('http://localhost:3000/api/usuarios', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dados),
-    });
-
-    const resultado = await response.json();
-    if (response.ok) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Sucesso!',
-        text: 'Usuário cadastrado com sucesso!',
-      });
-      document.getElementById("registerForm").reset();
-    } else {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro ao cadastrar',
-        text: resultado.erro || 'Ocorreu um erro desconhecido.',
-      });
+    if (!tipo || !nome || !cpfCnpj || !email || !senha || !confirmarSenha) {
+        Swal.fire({
+        icon: 'warning',
+        title: 'Atenção',
+        text: 'Preencha todos os campos obrigatórios.',
+        });
+        return;
     }
-  } catch (err) {
-    console.error(err);
-    Swal.fire({
-      icon: 'error',
-      title: 'Erro de conexão',
-      text: 'Erro na comunicação com o servidor.',
-    });
-  }
-}
+
+    if (senha !== confirmarSenha) {
+        Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'As senhas não coincidem.',
+        });
+        return;
+    }
+
+    // Define os campos cpf/cnpj e razão social dependendo do tipo de usuário
+    let cpf = null;
+    let cnpj = null;
+    let razao_social = null;
+
+    const tipoMap = {
+        empresa: 1,
+        admin: 2,
+        solucionador: 3
+    };
+
+    const id_tipo_usuario = tipoMap[tipo];
+
+    cnpj = cpfCnpj;
+    cpf = cpfCnpj;
+    razao_social = nome;
+
+
+    const dados = {
+        nome,
+        razao_social,
+        cpf,
+        cnpj,
+        email,
+        senha,
+        descricao,
+        id_tipo_usuario,
+    };
+
+    try {
+        const response = await fetch('http://localhost:3000/api/usuarios', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dados),
+        });
+
+        const resultado = await response.json();
+        if (response.ok) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Usuário cadastrado com sucesso!',
+        });
+        $entrou = 1;
+        document.getElementById("registerForm").reset();
+
+        $('#auth-buttons').html(`<button type="button" class="btn btn-secondary btn-lg" data-bs-toggle="modal" data-bs-target="#modalCadastrarDesafio" id="btnAbrirModalDesafio" style="display: flex;">
+                                    Desafios
+                                </button>`);
+
+        } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro ao cadastrar',
+            text: resultado.erro || 'Ocorreu um erro desconhecido.',
+        });
+        }
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+        icon: 'error',
+        title: 'Erro de conexão',
+        text: 'Erro na comunicação com o servidor.',
+        });
+    }
+    }
 
     // $(document).ready(() => {
     //     carregarDesafios();
     // });
+
+    async function login(){
+        const email = document.querySelector('#loginEmail').value.trim();
+        const senha = document.querySelector('#loginSenha').value.trim();
+
+        if (!email || !senha) {
+            Swal.fire('Atenção', 'Preencha todos os campos.', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha }),
+            });
+
+            const resultado = await response.json();
+
+            if (response.ok && resultado.usuario) {
+            Swal.fire('Bem-vindo!', 'Login realizado com sucesso.', 'success');
+
+            // Salvar usuário em variável global/localStorage (opcional)
+            window.usuarioLogado = resultado.usuario;
+
+            // Verifica se é tipo empresa (id_tipo_usuario == 1)
+            if (resultado.usuario.id_tipo_usuario === 2) {
+                $('#auth-buttons').html(`<button type="button" class="btn btn-secondary btn-lg" data-bs-toggle="modal" data-bs-target="#modalCadastrarDesafio" onclick="listarDesafios()" id="btnAbrirModalDesafio" style="display: flex;">
+                    Desafios
+                                </button>`);
+            }else{
+                $('#auth-buttons').html('');
+            }
+
+            } else {
+            Swal.fire('Erro', resultado.erro || 'Credenciais inválidas', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Erro', 'Erro ao conectar com o servidor.', 'error');
+        }
+    }
+
+
+    document.querySelector('#formCadastrarDesafio').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const id = document.querySelector('#idDesafio').value;
+    const titulo = document.querySelector('#inputTituloDesafio').value;
+    const descricao = document.querySelector('#inputDescricaoDesafio').value;
+    const id_categoria = parseInt(document.querySelector('#selectCategoriaDesafio').value);
+
+    if (!titulo || !descricao || !id_categoria) {
+      return Swal.fire({ icon: 'warning', text: 'Preencha todos os campos.' });
+    }
+
+    const dados = { titulo, descricao, id_categoria };
+
+    const url = id ? `http://localhost:3000/api/desafios/${id}` : 'http://localhost:3000/api/desafios';
+    const metodo = id ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+
+    const resultado = await response.json();
+
+    if (response.ok) {
+      Swal.fire({ icon: 'success', text: id ? 'Desafio atualizado!' : 'Desafio cadastrado!' });
+      document.querySelector('#formCadastrarDesafio').reset();
+      document.querySelector('#idDesafio').value = '';
+      listarDesafios();
+    } else {
+      Swal.fire({ icon: 'error', text: resultado.erro || 'Erro ao salvar desafio.' });
+    }
+  });
+
+  async function listarDesafios() {
+    const res = await fetch('http://localhost:3000/api/desafios');
+    const desafios = await res.json();
+    const tbody = document.querySelector('#tabelaDesafios');
+
+    console.log(desafios)
+
+    tbody.innerHTML = '';
+    desafios.forEach(d => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${d.titulo}</td>
+        <td>${d.descricao}</td>
+        <td>${d.categoria_desafio.nome}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-2" onclick="editarDesafio(${d.id})">Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirDesafio(${d.id})">Excluir</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function editarDesafio(id) {
+    const res = await fetch(`http://localhost:3000/api/desafios/${id}`);
+    const desafio = await res.json();
+    document.querySelector('#idDesafio').value = desafio.id;
+    document.querySelector('#inputTituloDesafio').value = desafio.titulo;
+    document.querySelector('#inputDescricaoDesafio').value = desafio.descricao;
+    document.querySelector('#selectCategoriaDesafio').value = desafio.id_categoria;
+  }
+
+  async function excluirDesafio(id) {
+    const confirm = await Swal.fire({
+      title: 'Deseja excluir?',
+      showCancelButton: true,
+      confirmButtonText: 'Sim',
+      cancelButtonText: 'Não'
+    });
+
+    if (confirm.isConfirmed) {
+      const res = await fetch(`http://localhost:3000/api/desafios/${id}`, {
+        method: 'DELETE'
+      });
+
+      const resultado = await res.json();
+
+      if (res.ok) {
+        Swal.fire({ icon: 'success', text: 'Desafio excluído com sucesso!' });
+        listarDesafios();
+      } else {
+        Swal.fire({ icon: 'error', text: resultado.erro || 'Erro ao excluir.' });
+      }
+    }
+  }
+
+//   document.addEventListener('DOMContentLoaded', listarDesafios);
+
 
 </script>
