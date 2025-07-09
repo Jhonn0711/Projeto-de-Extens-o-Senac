@@ -12,29 +12,6 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  else if (req.method === 'GET' && req.url === '/api/desafios') {
-    const { data, error } = await supabase
-      .from('desafio')
-      .select(`
-        id,
-        titulo,
-        descricao,
-        id_categoria,
-        categoria_desafio (
-          nome
-        )
-      `)
-      .eq('ativo', true);
-  
-    if (error) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ erro: 'Erro ao buscar desafios' }));
-    }
-  
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(data));
-  }
-
   // GET - Buscar desafio por ID
   else if (req.method === 'GET' && req.url.startsWith('/api/desafios/')) {
     const id = parseInt(req.url.split('/').pop());
@@ -117,22 +94,6 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ sucesso: true }));
-  }
-
-
-  // Endpoint para buscar desafios
-  else if (req.method === 'GET' && req.url === '/api/desafios') {
-    const { data, error } = await supabase
-      .from('desafio')
-      .select('*');
-
-    if (error) {
-      res.writeHead(500);
-      return res.end(JSON.stringify({ erro: 'Erro ao buscar dados' }));
-    }
-
-    res.writeHead(200);
-    return res.end(JSON.stringify(data));
   }
 
   else if (req.method === 'GET' && req.url === '/api/usuarios') {
@@ -262,7 +223,86 @@ const server = http.createServer(async (req, res) => {
       }
     });
   }
+
+  else if (req.method === 'GET' && req.url === '/api/categorias') {
+    try {
+      const { data, error } = await supabase
+        .from('categoria_desafio')
+        .select('id, nome')
+        .eq('ativo', true);
   
+      if (error) {
+        console.error('Erro ao buscar categorias:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ erro: 'Erro ao buscar categorias' }));
+      }
+  
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(data));
+    } catch (err) {
+      console.error('Erro inesperado ao buscar categorias:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ erro: 'Erro inesperado' }));
+    }
+  }
+
+  else if (req.method === 'POST' && req.url === '/api/categorias') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+    });
+  
+    req.on('end', async () => {
+      try {
+        const { nome } = JSON.parse(body);
+  
+        if (!nome) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ erro: 'Nome da categoria é obrigatório.' }));
+        }
+  
+        const { data, error } = await supabase
+          .from('categoria_desafio')
+          .insert([{ nome, ativo: true }]);
+  
+        if (error) {
+          console.error('Erro Supabase (categoria):', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ erro: error.message }));
+        }
+  
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ sucesso: true, data }));
+      } catch (err) {
+        console.error('Erro inesperado (categoria):', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ erro: 'Erro no servidor ao cadastrar categoria.' }));
+      }
+    });
+  }
+  
+  else if (req.method === 'GET' && req.url === '/api/desafios') {
+    const { data, error } = await supabase
+      .from('desafio')
+      .select(`
+        id,
+        titulo,
+        descricao,
+        id_categoria,
+        categoria_desafio (
+          nome
+        )
+      `)
+      .eq('ativo', true);
+  
+    if (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ erro: 'Erro ao buscar desafios' }));
+    }
+  
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(data));
+  }
 
   // Outros endpoints
   else {

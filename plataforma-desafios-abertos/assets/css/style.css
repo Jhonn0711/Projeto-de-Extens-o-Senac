@@ -966,3 +966,7 @@ h6 {
   border: 2px solid transparent;
   background: linear-gradient(var(--neutral-800), var(--neutral-800)) padding-box, var(--gradient-primary) border-box;
 }
+
+.card:hover{
+  cursor: pointer;
+}

@@ -119,33 +119,18 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="row g-3">
-                                    <div class="col-md-3">
+                                    <div class="col-md-5">
                                         <label class="form-label">Categoria</label>
                                         <select class="form-select" id="filter-categoria">
-                                            <option value="">Todas as categorias</option>
-                                            <option value="tecnologia">Tecnologia</option>
-                                            <option value="sustentabilidade">Sustentabilidade</option>
-                                            <option value="saude">Saúde</option>
-                                            <option value="educacao">Educação</option>
-                                            <option value="financas">Finanças</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Status</label>
-                                        <select class="form-select" id="filter-status">
-                                            <option value="">Todos os status</option>
-                                            <option value="aberto">Em Aberto</option>
-                                            <option value="avaliacao">Em Avaliação</option>
-                                            <option value="concluido">Concluído</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Buscar</label>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Buscar pelo titulo</label>
                                         <input type="text" class="form-control" id="search-input" placeholder="Buscar por título ou descrição...">
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label">&nbsp;</label>
-                                        <button class="btn btn-primary w-100" onclick="filterChallenges()">Filtrar</button>
+                                        <button class="btn btn-primary w-100" style="height: 50px;" onclick="filterChallenges()">Filtrar</button>
                                     </div>
                                 </div>
                             </div>
@@ -419,12 +404,6 @@
             <div class="mb-3">
               <label for="selectCategoriaDesafio" class="form-label">Categoria</label>
               <select class="form-select" id="selectCategoriaDesafio" required>
-                <option value="">Selecione uma categoria</option>
-                <option value="1">Tecnologia</option>
-                <option value="2">Sustentabilidade</option>
-                <option value="3">Saúde</option>
-                <option value="4">Educação</option>
-                <option value="5">Finanças</option>
               </select>
             </div>
   
@@ -452,6 +431,67 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
         </div>
   
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cadastro de Categoria -->
+<div class="modal fade" id="modalCadastrarCategoria" tabindex="-1" aria-labelledby="modalCadastrarCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+  
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalCadastrarCategoriaLabel">
+            <i class="fas fa-tags me-1"></i> Nova Categoria
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+  
+        <div class="modal-body">
+          <form id="formCadastrarCategoria">
+            <div class="mb-3">
+              <label for="inputNomeCategoria" class="form-label">Nome da Categoria</label>
+              <input type="text" class="form-control" id="inputNomeCategoria" placeholder="Ex: Tecnologia" required>
+            </div>
+          </form>
+        </div>
+  
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success" form="formCadastrarCategoria" onclick="cadastrarCategoria(event)">Cadastrar</button>
+        </div>
+  
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalDetalhesDesafio" tabindex="-1" aria-labelledby="modalDetalhesDesafioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-white text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalDetalhesDesafioLabel">
+            <i class="fas fa-info-circle me-2"></i>Detalhes do Desafio
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <h4 id="tituloDesafioModal" class="fw-bold mb-3"></h4>
+          <h6><strong>Categoria:</strong> <span id="categoriaDesafioModal"></span></h6>
+          <hr>
+          <p id="descricaoDesafioModal" class="mb-4 text-white"></p>
+  
+          <div class="alert alert-info" role="alert">
+            Este desafio está aberto para soluções! Esperamos que sua expertise contribua para resolver esse problema. <br>
+            Boa sorte em sua jornada de inovação!
+          </div>
+  
+          <div class="mt-3">
+            <p><strong>Contato da Empresa:</strong> <a href="mailto:contato@empresaexemplo.com">contato@empresaexemplo.com</a></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -542,9 +582,32 @@
         $entrou = 1;
         document.getElementById("registerForm").reset();
 
-        $('#auth-buttons').html(`<button type="button" class="btn btn-secondary btn-lg" data-bs-toggle="modal" data-bs-target="#modalCadastrarDesafio" id="btnAbrirModalDesafio" style="display: flex;">
-                                    Desafios
-                                </button>`);
+        let botoes = '';
+
+botoes += `<button type="button" class="btn btn-secondary btn-lg me-2" id="btnAbrirModalDesafio"  onclick="listarDesafios()">
+    Desafios
+</button>`;
+
+if (resultado.usuario.id_tipo_usuario === 2) {
+    botoes += `<button type="button" class="btn btn-dark btn-lg" id="btnAbrirModalCategoria">
+        Categorias
+    </button>`;
+}
+
+$('#auth-buttons').html(botoes);
+
+// Eventos
+$('#btnAbrirModalDesafio').click(() => {
+    carregarCategorias();
+    const modal = new bootstrap.Modal(document.getElementById('modalCadastrarDesafio'));
+    modal.show();
+});
+
+$('#btnAbrirModalCategoria').click(() => {
+    const modal = new bootstrap.Modal(document.getElementById('modalCadastrarCategoria'));
+    modal.show();
+});
+
 
         } else {
         Swal.fire({
@@ -592,10 +655,33 @@
             window.usuarioLogado = resultado.usuario;
 
             // Verifica se é tipo empresa (id_tipo_usuario == 1)
-            if (resultado.usuario.id_tipo_usuario === 2) {
-                $('#auth-buttons').html(`<button type="button" class="btn btn-secondary btn-lg" data-bs-toggle="modal" data-bs-target="#modalCadastrarDesafio" onclick="listarDesafios()" id="btnAbrirModalDesafio" style="display: flex;">
+            if (resultado.usuario.id_tipo_usuario === 2 || resultado.usuario.id_tipo_usuario === 1) {
+                let botoes = '';
+
+                botoes += `<button type="button" class="btn btn-secondary btn-lg me-2" id="btnAbrirModalDesafio"  onclick="listarDesafios()">
                     Desafios
-                                </button>`);
+                </button>`;
+
+                if (resultado.usuario.id_tipo_usuario === 2) {
+                    botoes += `<button type="button" class="btn btn-dark btn-lg" id="btnAbrirModalCategoria">
+                        Categorias
+                    </button>`;
+                }
+
+                $('#auth-buttons').html(botoes);
+
+                // Eventos
+                $('#btnAbrirModalDesafio').click(() => {
+                    carregarCategorias();
+                    const modal = new bootstrap.Modal(document.getElementById('modalCadastrarDesafio'));
+                    modal.show();
+                });
+
+                $('#btnAbrirModalCategoria').click(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('modalCadastrarCategoria'));
+                    modal.show();
+                });
+
             }else{
                 $('#auth-buttons').html('');
             }
@@ -650,8 +736,6 @@
     const desafios = await res.json();
     const tbody = document.querySelector('#tabelaDesafios');
 
-    console.log(desafios)
-
     tbody.innerHTML = '';
     desafios.forEach(d => {
       const tr = document.createElement('tr');
@@ -700,6 +784,209 @@
       }
     }
   }
+
+  async function carregarCategorias() {
+    try {
+        const response = await fetch('http://localhost:3000/api/categorias');
+        const categorias = await response.json();
+
+        console.log(categorias)
+        const select = document.getElementById('selectCategoriaDesafio');
+        select.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+        categorias.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.nome;
+        select.appendChild(option);
+        });
+    } catch (err) {
+        console.error('Erro ao carregar categorias:', err);
+        Swal.fire({
+        icon: 'error',
+        title: 'Erro',
+        text: 'Não foi possível carregar as categorias.',
+        });
+    }
+    }
+
+    $(document).ready(async () => {
+        try {
+            const response = await fetch('http://localhost:3000/api/categorias');
+            const categorias = await response.json();
+
+            const select = document.getElementById('filter-categoria');
+            select.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+            categorias.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.nome;
+            select.appendChild(option);
+            });
+        } catch (err) {
+            console.error('Erro ao carregar categorias:', err);
+            Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Não foi possível carregar as categorias.',
+            });
+        }
+
+        carregarCategoriasFiltro();
+    });
+
+    async function cadastrarCategoria(event) {
+  event.preventDefault(); // Previne reload do form
+
+  const nome = document.querySelector('#inputNomeCategoria').value.trim();
+  if (!nome) {
+    Swal.fire('Atenção', 'Informe o nome da categoria.', 'warning');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/categorias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome }),
+    });
+
+    const resultado = await response.json();
+
+    if (response.ok) {
+      Swal.fire('Sucesso', 'Categoria cadastrada com sucesso!', 'success');
+      document.getElementById('formCadastrarCategoria').reset();
+      const modal = bootstrap.Modal.getInstance(document.getElementById('modalCadastrarCategoria'));
+      modal.hide();
+      carregarCategorias(); // Atualiza o select
+      const response = await fetch('http://localhost:3000/api/categorias');
+        const categorias = await response.json();
+
+        const select = document.getElementById('filter-categoria');
+        select.innerHTML = '<option value="">Selecione uma categoria</option>';
+
+        categorias.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.nome;
+        select.appendChild(option);
+        });
+    } else {
+      Swal.fire('Erro', resultado.erro || 'Erro ao cadastrar categoria.', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Erro', 'Erro de comunicação com o servidor.', 'error');
+  }
+}
+
+async function carregarCategoriasFiltro() {
+  const select = document.getElementById('filter-categoria');
+  select.innerHTML = `<option value="">Todas as categorias</option>`; // default
+
+  try {
+    const response = await fetch('http://localhost:3000/api/categorias');
+    const categorias = await response.json();
+
+    categorias.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.nome;
+      select.appendChild(opt);
+    });
+  } catch (error) {
+    console.error('Erro ao carregar categorias:', error);
+  }
+}
+
+async function listarDesafiosPublicos() {
+  try {
+    const response = await fetch('http://localhost:3000/api/desafios');
+    const desafios = await response.json();
+
+    renderizarDesafiosParaSolucionador(desafios);
+  } catch (err) {
+    console.error('Erro ao buscar desafios:', err);
+  }
+}
+
+async function filterChallenges() {
+  const categoriaId = document.getElementById('filter-categoria').value;
+  const termo = document.getElementById('search-input').value.toLowerCase();
+
+  try {
+    const response = await fetch('http://localhost:3000/api/desafios');
+    let desafios = await response.json();
+
+    if (categoriaId) {
+      desafios = desafios.filter(d => d.id_categoria == categoriaId);
+    }
+
+    if (termo) {
+      desafios = desafios.filter(d =>
+        d.titulo.toLowerCase().includes(termo) ||
+        d.descricao.toLowerCase().includes(termo)
+      );
+    }
+
+    renderizarDesafiosParaSolucionador(desafios);
+  } catch (err) {
+    console.error('Erro ao filtrar desafios:', err);
+  }
+}
+
+function renderizarDesafiosParaSolucionador(desafios) {
+  const grid = document.getElementById('challenges-grid');
+  grid.innerHTML = '';
+
+  if (!desafios || desafios.length === 0) {
+    grid.innerHTML = `<div class="col-12 text-center"><p class="text-muted">Nenhum desafio encontrado.</p></div>`;
+    return;
+  }
+
+  desafios.forEach(desafio => {
+    const card = document.createElement('div');
+    card.className = 'col-md-4';
+    card.innerHTML = `
+      <div class="card shadow-sm h-100" onclick="solucionarDesafio(${desafio.id})">
+        <div class="card-body">
+          <h2 class="card-title">${desafio.titulo}</h2><br>
+          <h7 class="card-subtitle mb-2 text-white">${desafio.categoria_desafio?.nome || 'Categoria não encontrada'}</h7><br><br>
+          <div style="border: 1px solid white;"></div><br>
+          <p class="card-text">${desafio.descricao}</p>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function solucionarDesafio(id) {
+  try {
+    const response = await fetch('http://localhost:3000/api/desafios');
+    const desafios = await response.json();
+
+    const desafio = desafios.find(d => d.id === id);
+    if (!desafio) {
+      return Swal.fire('Erro', 'Desafio não encontrado.', 'error');
+    }
+
+    // Preencher os dados na modal
+    document.getElementById('tituloDesafioModal').textContent = desafio.titulo;
+    document.getElementById('categoriaDesafioModal').textContent = desafio.categoria_desafio?.nome || 'Sem categoria';
+    document.getElementById('descricaoDesafioModal').textContent = desafio.descricao;
+
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalhesDesafio'));
+    modal.show();
+  } catch (error) {
+    console.error('Erro ao carregar desafio:', error);
+    Swal.fire('Erro', 'Erro ao carregar detalhes do desafio.', 'error');
+  }
+}
+
+
+
 
 //   document.addEventListener('DOMContentLoaded', listarDesafios);
 
