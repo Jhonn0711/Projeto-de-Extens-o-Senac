@@ -436,35 +436,47 @@
   </div>
 
   <!-- Modal: Cadastro de Categoria -->
-<div class="modal fade" id="modalCadastrarCategoria" tabindex="-1" aria-labelledby="modalCadastrarCategoriaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<<div class="modal fade" id="modalCadastrarCategoria" tabindex="-1" aria-labelledby="modalCadastrarCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
   
         <div class="modal-header">
           <h5 class="modal-title" id="modalCadastrarCategoriaLabel">
-            <i class="fas fa-tags me-1"></i> Nova Categoria
+            <i class="fas fa-tags me-1"></i> Gerenciar Categorias
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
   
         <div class="modal-body">
+          <!-- Formulário de Cadastro/Editar -->
           <form id="formCadastrarCategoria">
+            <input type="hidden" id="categoriaId" value="">
             <div class="mb-3">
               <label for="inputNomeCategoria" class="form-label">Nome da Categoria</label>
               <input type="text" class="form-control" id="inputNomeCategoria" placeholder="Ex: Tecnologia" required>
             </div>
+            <button type="submit" class="btn btn-success w-100" id="btnSalvarCategoria">Cadastrar</button>
           </form>
-        </div>
   
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success" form="formCadastrarCategoria" onclick="cadastrarCategoria(event)">Cadastrar</button>
+          <hr class="my-4">
+  
+          <!-- Tabela de Categorias -->
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th>Nome</th>
+                  <th style="width: 150px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="corpoTabelaCategorias"></tbody>
+            </table>
+          </div>
         </div>
   
       </div>
     </div>
   </div>
-
   <div class="modal fade" id="modalDetalhesDesafio" tabindex="-1" aria-labelledby="modalDetalhesDesafioLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content bg-white text-dark">
@@ -985,6 +997,110 @@ async function solucionarDesafio(id) {
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  listarCategorias();
+});
+
+document.getElementById('formCadastrarCategoria').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const id = document.getElementById('categoriaId').value;
+  const nome = document.getElementById('inputNomeCategoria').value.trim();
+
+  if (!nome) {
+    return Swal.fire('Atenção', 'Informe o nome da categoria.', 'warning');
+  }
+
+  const metodo = id ? 'PUT' : 'POST';
+  const url = id
+    ? `http://localhost:3000/api/categorias/${id}`
+    : 'http://localhost:3000/api/categorias';
+
+  try {
+    const response = await fetch(url, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome })
+    });
+
+    const resultado = await response.json();
+
+    if (response.ok) {
+      Swal.fire('Sucesso', `Categoria ${id ? 'atualizada' : 'cadastrada'} com sucesso!`, 'success');
+      document.getElementById('formCadastrarCategoria').reset();
+      document.getElementById('categoriaId').value = '';
+      document.getElementById('btnSalvarCategoria').textContent = 'Cadastrar';
+      listarCategorias();
+    } else {
+      Swal.fire('Erro', resultado.erro || 'Não foi possível processar a solicitação.', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Erro', 'Erro ao conectar com o servidor.', 'error');
+  }
+});
+
+async function listarCategorias() {
+  try {
+    const response = await fetch('http://localhost:3000/api/categorias');
+    const categorias = await response.json();
+    const corpo = document.getElementById('corpoTabelaCategorias');
+    corpo.innerHTML = '';
+
+    categorias.forEach(c => {
+      corpo.innerHTML += `
+        <tr>
+          <td>${c.nome}</td>
+          <td>
+            <button class="btn btn-sm btn-warning me-2" onclick="editarCategoria(${c.id}, '${c.nome}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="excluirCategoria(${c.id})">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>`;
+    });
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Erro', 'Erro ao buscar categorias.', 'error');
+  }
+}
+
+function editarCategoria(id, nome) {
+  document.getElementById('categoriaId').value = id;
+  document.getElementById('inputNomeCategoria').value = nome;
+  document.getElementById('btnSalvarCategoria').textContent = 'Salvar Alterações';
+}
+
+async function excluirCategoria(id) {
+  const confirm = await Swal.fire({
+    title: 'Tem certeza?',
+    text: 'Deseja realmente desativar esta categoria?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, desativar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (confirm.isConfirmed) {
+    try {
+      const response = await fetch(`http://localhost:3000/api/categorias/${id}`, {
+        method: 'DELETE'
+      });
+
+      const resultado = await response.json();
+      if (response.ok) {
+        Swal.fire('Feito!', 'Categoria desativada.', 'success');
+        listarCategorias();
+      } else {
+        Swal.fire('Erro', resultado.erro || 'Não foi possível desativar.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Erro', 'Erro ao desativar categoria.', 'error');
+    }
+  }
+}
 
 
 

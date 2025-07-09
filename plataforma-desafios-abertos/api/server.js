@@ -304,6 +304,60 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify(data));
   }
 
+  else if (req.method === 'GET' && req.url === '/api/categorias') {
+    const { data, error } = await supabase
+      .from('categoria_desafio')
+      .select('*')
+      .eq('ativo', true);
+  
+    res.writeHead(error ? 500 : 200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(error ? { erro: error.message } : data));
+  }
+  
+  // POST nova categoria
+  else if (req.method === 'POST' && req.url === '/api/categorias') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      const { nome } = JSON.parse(body);
+      const { data, error } = await supabase
+        .from('categoria_desafio')
+        .insert([{ nome, ativo: true }]);
+  
+      res.writeHead(error ? 500 : 201, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(error ? { erro: error.message } : data));
+    });
+  }
+  
+  // PUT atualizar categoria
+  else if (req.method === 'PUT' && req.url.startsWith('/api/categorias/')) {
+    const id = req.url.split('/').pop();
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      const { nome } = JSON.parse(body);
+      const { error } = await supabase
+        .from('categoria_desafio')
+        .update({ nome })
+        .eq('id', id);
+  
+      res.writeHead(error ? 500 : 200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(error ? { erro: error.message } : { sucesso: true }));
+    });
+  }
+  
+  // DELETE (desativar)
+  else if (req.method === 'DELETE' && req.url.startsWith('/api/categorias/')) {
+    const id = req.url.split('/').pop();
+    const { error } = await supabase
+      .from('categoria_desafio')
+      .update({ ativo: false })
+      .eq('id', id);
+  
+    res.writeHead(error ? 500 : 200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(error ? { erro: error.message } : { sucesso: true }));
+  }
+
   // Outros endpoints
   else {
     res.writeHead(404);
