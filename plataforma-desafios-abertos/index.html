@@ -436,7 +436,7 @@
   </div>
 
   <!-- Modal: Cadastro de Categoria -->
-<<div class="modal fade" id="modalCadastrarCategoria" tabindex="-1" aria-labelledby="modalCadastrarCategoriaLabel" aria-hidden="true">
+<div class="modal fade" id="modalCadastrarCategoria" tabindex="-1" aria-labelledby="modalCadastrarCategoriaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
   
@@ -514,10 +514,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="assets/js/api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</body>
-</html>
-
-<script>
+    <script>
     $entrou = 0;
     async function cadastrarUsuario() {
     const tipo = document.querySelector('input[name="userType"]:checked')?.value;
@@ -585,7 +582,8 @@
         });
 
         const resultado = await response.json();
-        if (response.ok) {
+        
+        if (response.ok && resultado.usuario) {
         Swal.fire({
             icon: 'success',
             title: 'Sucesso!',
@@ -593,6 +591,9 @@
         });
         $entrou = 1;
         document.getElementById("registerForm").reset();
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+        if (modal) modal.hide();
 
         let botoes = '';
 
@@ -1108,3 +1109,5 @@ async function excluirCategoria(id) {
 
 
 </script>
+</body>
+</html>
