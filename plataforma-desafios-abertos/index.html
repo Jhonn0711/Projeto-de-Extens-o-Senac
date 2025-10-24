@@ -596,10 +596,11 @@
         if (modal) modal.hide();
 
         let botoes = '';
-
-botoes += `<button type="button" class="btn btn-secondary btn-lg me-2" id="btnAbrirModalDesafio"  onclick="listarDesafios()">
-    Desafios
-</button>`;
+        if(resultado.usuario.id_tipo_usuario != 3){
+          botoes += `<button type="button" class="btn btn-secondary btn-lg me-2" id="btnAbrirModalDesafio"  onclick="listarDesafios()">
+              Desafios
+          </button>`;
+        }
 
 if (resultado.usuario.id_tipo_usuario === 2) {
     botoes += `<button type="button" class="btn btn-dark btn-lg" id="btnAbrirModalCategoria">

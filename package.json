@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.50.3",
-    "cross-fetch": "^4.1.0"
+    "cross-fetch": "^4.1.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }
